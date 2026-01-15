@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "node build.mjs",
-    "dev": "esbuild src/main/resources/static/ts/main.ts --bundle --format=esm --target=es2020 --outfile=src/main/resources/static/js/main.bundle.js --sourcemap --watch"
+    "dev": "esbuild src/main/resources/static/ts/pages/*.ts --bundle --format=esm --target=es2020 --outdir=src/main/resources/static/js --entry-names=[name].bundle --sourcemap --watch --splitting"
   },
   "dependencies": {
     "jose": "5.9.3",

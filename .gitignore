@@ -8,4 +8,4 @@
 node
 node_modules/
 /src/main/resources/static/js/
-/src/main/resources/static/keys/
+/src/main/resources/static/keys/rsa-jwk.json

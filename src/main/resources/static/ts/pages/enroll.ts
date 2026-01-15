@@ -1,16 +1,12 @@
-import {
-  createNewKeyPair,
-} from "./util/keys-util.js";
+import { getById, onReady } from "../shared.js";
+import { createNewKeyPair } from "../util/keys-util.js";
+import { createEnrollmentJwt, unpackEnrollmentToken } from "../util/token-util.js";
+import { postEnrollComplete } from "../util/http-util.js";
 
-import {
-  createEnrollmentJwt,
-  unpackEnrollmentToken,
-} from "./util/token-util.js";
-import { postEnrollComplete } from "./util/http-util.js";
-
-document.addEventListener("DOMContentLoaded", () => {
+onReady(() => {
   const qs = new URLSearchParams(location.search);
 
+  // query parameter fields
   const tokenEl = getById<HTMLInputElement>("token");
   const contextEl = getById<HTMLInputElement>("context");
   const iamUrlEl = getById<HTMLInputElement>("iam-url");
@@ -23,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   tokenEl.value = qs.get("token") ?? "";
   contextEl.value = qs.get("context") ?? "";
-  iamUrlEl.value = qs.get("url") ?? "http://localhost:8080/realms/demo/push-mfa/enroll/complete";
+  iamUrlEl.value = qs.get("url") ?? "";
 
   createJwkBtn.addEventListener("click", async () => {
     await createNewKeyPair();
@@ -37,25 +33,25 @@ document.addEventListener("DOMContentLoaded", () => {
       outEl.textContent = "Please enter token.";
       return;
     }
-    if(_iamUrl){
-        try{
-            _iamUrl = new URL(_iamUrl);
-        } catch(e){
-            outEl.textContent = "Not a valid url.";
-            return;
-        }
+    if (_iamUrl) {
+      try {
+        _iamUrl = new URL(_iamUrl);
+      } catch (e) {
+        outEl.textContent = "Not a valid url.";
+        return;
+      }
     }
 
     outEl.textContent = "Starting backend enrollment...";
     try {
       const formData = new FormData();
-      formData.append('token', _token);
-      if (_context) formData.append('context', _context);
-      if (_iamUrl) formData.append('iamUrl', _iamUrl.toString());
+      formData.append("token", _token);
+      if (_context) formData.append("context", _context);
+      formData.append("_iamUrl", _iamUrl ? _iamUrl.toString() : "http://localhost:8080/realms/demo/push-mfa/enroll/complete");
 
-      const response = await fetch('/enroll/complete', {
-        method: 'POST',
-        body: formData
+      const response = await fetch("/enroll/complete", {
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
@@ -66,8 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.text();
       outEl.textContent = data;
     } catch (e) {
-      outEl.textContent =
-        "Error: " + (e instanceof Error ? e.message : String(e));
+      outEl.textContent = "Error: " + (e instanceof Error ? e.message : String(e));
     }
   });
 
@@ -79,13 +74,13 @@ document.addEventListener("DOMContentLoaded", () => {
       outEl.textContent = "Please enter token.";
       return;
     }
-    if(_iamUrl){
-        try{
-            _iamUrl = new URL(_iamUrl);
-        } catch(e){
-            outEl.textContent = "Not a valid url.";
-            return;
-        }
+    if (_iamUrl) {
+      try {
+        _iamUrl = new URL(_iamUrl);
+      } catch (e) {
+        outEl.textContent = "Not a valid url.";
+        return;
+      }
     }
 
     outEl.textContent = "Starting enrollment...";
@@ -95,10 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         outEl.textContent = "invalid enrollment token payload";
         return;
       }
-      const enrollmentJwt = await createEnrollmentJwt(
-        enrollmentValues,
-        _context,
-      );
+      const enrollmentJwt = await createEnrollmentJwt(enrollmentValues, _context);
       const keycloakResponse = await postEnrollComplete(enrollmentJwt, _iamUrl as URL);
 
       if (!keycloakResponse.ok) {
@@ -109,16 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await keycloakResponse.text();
       outEl.textContent = JSON.stringify(data, null, 2);
     } catch (e) {
-      outEl.textContent =
-        "Error: " + (e instanceof Error ? e.message : String(e));
+      outEl.textContent = "Error: " + (e instanceof Error ? e.message : String(e));
     }
   });
 });
-
-function getById<T extends HTMLElement>(id: string): T {
-  const el = document.getElementById(id);
-  if (!el) {
-    throw new Error(`Element mit ID "${id}" nicht gefunden`);
-  }
-  return el as T;
-}

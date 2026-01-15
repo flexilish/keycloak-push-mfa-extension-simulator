@@ -1,11 +1,11 @@
-import { ENROLL_COMPLETE_URL, TOKEN_ENDPOINT } from "./urls.js";
+
 
 export const DEVICE_CLIENT_ID = "push-device-client";
 export const DEVICE_CLIENT_SECRET = "device-client-secret";
 
 export async function postEnrollComplete(enrollReplyToken: string, url?:  URL) {
 
-  let enrollmentCompleteEndpoint = url ? url.toString() : ENROLL_COMPLETE_URL;
+  let enrollmentCompleteEndpoint = url ? url.toString() : "";
 
   return await post(
       enrollmentCompleteEndpoint,
@@ -24,7 +24,7 @@ export async function postAccessToken(dPop: string) {
     client_id: DEVICE_CLIENT_ID,
     client_secret: DEVICE_CLIENT_SECRET,
   });
-  return await post(TOKEN_ENDPOINT, header, body);
+  return await post("", header, body);
 }
 
 export async function postChallengesResponse(

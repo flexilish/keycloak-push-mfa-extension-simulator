@@ -9,7 +9,7 @@ logging:
     root: info
 
 app:
-  basepath: /
+  basepath:
   web:
     title: "PushMFA-Simulator"
   env: "dev"

@@ -12,8 +12,13 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -33,6 +38,8 @@ import org.springframework.web.client.RestTemplate;
 @Controller
 @RequestMapping("/enroll")
 public class EnrollController {
+
+    private static final Logger logger = LoggerFactory.getLogger(EnrollController.class);
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -55,9 +62,12 @@ public class EnrollController {
             @RequestParam(required = false) String iamUrl)
             throws Exception {
 
+        logger.info("Starting enrollment completion process");
+
         if (iamUrl == null || iamUrl.isEmpty()) {
             iamUrl = defaultIamUrl;
         }
+        logger.debug("Using IAM URL: {}", iamUrl);
         JWT jwt = JWTParser.parse(token);
         JWTClaimsSet claims = jwt.getJWTClaimsSet();
 
@@ -67,7 +77,10 @@ public class EnrollController {
         String nonce = claims.getClaims().containsKey("nonce") ? claims.getStringClaim("nonce") : null;
         String userId = claims.getClaims().containsKey("sub") ? claims.getStringClaim("sub") : null;
 
+        logger.debug("Extracted claims - enrollmentId: {}, userId: {}", enrollmentId, userId);
+
         if (enrollmentId == null || nonce == null || userId == null) {
+            logger.warn("Invalid token: missing required claims");
             return ResponseEntity.badRequest().body("Invalid token: missing required claims");
         }
 
@@ -110,6 +123,8 @@ public class EnrollController {
         signedJWT.sign(new RSASSASigner(privateJwk));
         String enrollmentToken = signedJWT.serialize();
 
+        logger.debug("Enrollment token generated successfully");
+
         Map<String, Object> body = Map.of("token", enrollmentToken);
 
         String jsonBody = objectMapper.writeValueAsString(body);
@@ -117,11 +132,17 @@ public class EnrollController {
         // POST to Keycloak
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        List<MediaType> acceptList = new ArrayList<>();
+        acceptList.add(MediaType.APPLICATION_JSON);
+        headers.setAccept(acceptList);
+
         HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
         Objects.requireNonNull(iamUrl, "iamUrl must not be null");
         Objects.requireNonNull(HttpMethod.POST, "httpMethod must not be null");
         ResponseEntity<String> response = restTemplate.exchange(iamUrl, HttpMethod.POST, entity, String.class);
+
+        logger.info("Enrollment request sent to {}. Response status: {}", iamUrl, response.getStatusCode());
 
         return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
