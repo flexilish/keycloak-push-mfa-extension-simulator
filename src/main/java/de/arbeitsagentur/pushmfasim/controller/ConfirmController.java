@@ -41,7 +41,7 @@ public class ConfirmController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfirmController.class);
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Value("${app.jwk.path:static/keys/rsa-jwk.json}")
     private String jwkPath;
@@ -57,6 +57,10 @@ public class ConfirmController {
 
     @Value("${app.clientSecret:device-client-secret}")
     private String clientSecret;
+
+    public ConfirmController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     private static final String DEVICE_ALIAS = "-device-alias-";
     private static final String DEVICE_STATIC_ID = "device-static-id";

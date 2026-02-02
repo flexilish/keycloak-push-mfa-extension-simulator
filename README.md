@@ -240,9 +240,32 @@ Add the following properties to the application.yaml to tell the mocks Rest Temp
 ```yaml
 proxy:
   http:
-    host: your-proxy-host
-    port: 3182
+    host: <your-proxy-host>
+    port: <your-proxy-port>
 ```
+
+### Example Enrollment Backend Call using mitmprox
+
+1. Spin up the mitmprox
+```bash
+sudo docker run --rm -it -p 3128:8080 mitmproxy/mitmproxy mitmproxy --mode regular
+```
+
+2. Configure Spring to use the proxy by using the default gateway IP 172.17.0.1 of the Docker bridge network (docker0). Add the following properties to the application.yaml:
+```yaml
+proxy:
+  http:
+    host: 172.17.0.1
+    port: 3128
+```
+
+3. Rebuild the application
+```bash
+sudo docker build -t push-mfa-extension-simulator .
+sudo docker run -p 5000:5000 -p 5005:5005 push-mfa-extension-simulator
+```
+4. In the PushMFA-Simulator UI on http://localhost:5000/mock/enroll change the URL IdentityManagement from http://localhost:8080/realms/demo to http://172.17.0.1:8080/realms/demo and click Enroll.
+5. Verify the logs of the running nitmproxy instance
 
 ## Troubleshooting
 
