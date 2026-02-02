@@ -72,3 +72,8 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+proxy:
+  http:
+    host: 172.17.0.1
+    port: 3128
