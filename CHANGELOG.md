@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0](https://github.com/ba-itsys/keycloak-push-mfa-extension-simulator/compare/v1.4.0...v1.5.0) (2026-02-03)
+
+
+### Features
+
+* adds proxy to RestTemplate if given ([cca6339](https://github.com/ba-itsys/keycloak-push-mfa-extension-simulator/commit/cca6339a0b1f248cf94085f33a0ff9bc8322f1aa))
+* aligns proxy implementation and adds proxy example ([64c0d3e](https://github.com/ba-itsys/keycloak-push-mfa-extension-simulator/commit/64c0d3e7a95808572912b6f7926082952b1c4517))
+* update README.md remove proxy ([59b97dc](https://github.com/ba-itsys/keycloak-push-mfa-extension-simulator/commit/59b97dc2f7b2044803e8635938d9cc84a4764db7))
+
 ## [1.4.0](https://github.com/ba-itsys/keycloak-push-mfa-extension-simulator/compare/v1.3.0...v1.4.0) (2026-01-29)
 
 
