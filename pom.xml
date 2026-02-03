@@ -11,7 +11,7 @@
 
   <groupId>de.arbeitsagentur.digidplus</groupId>
   <artifactId>keycloak-push-mfa-extension-simulator</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Keycloak Push MFA Extension Simulator</name>
