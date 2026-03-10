@@ -1,8 +1,5 @@
 package de.arbeitsagentur.pushmfasim.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -14,7 +11,6 @@ import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,12 +23,16 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/confirm")
@@ -140,8 +140,7 @@ public class ConfirmController {
             JsonNode root = objectMapper.readTree(jwkResource.getInputStream());
             JsonNode privateNode = root.get("private");
 
-            Map<String, Object> privateMap =
-                    objectMapper.convertValue(privateNode, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> privateMap = objectMapper.convertValue(privateNode, new TypeReference<>() {});
             RSAKey privateJwk = RSAKey.parse(privateMap);
             logger.debug("JWK loaded successfully with key ID: {}", privateJwk.getKeyID());
 
@@ -178,7 +177,7 @@ public class ConfirmController {
             // Check if challenge exists in pending list
             JsonNode pendingChallenge = null;
             for (JsonNode challenge : pendingJson.get("challenges")) {
-                if (challenge.has("cid") && challenge.get("cid").asText().equals(challengeId)) {
+                if (challenge.has("cid") && challenge.get("cid").asString().equals(challengeId)) {
                     pendingChallenge = challenge;
                     break;
                 }
@@ -192,7 +191,7 @@ public class ConfirmController {
 
             // Check if user verification is required for approve action
             String pendingUserVerification = pendingChallenge.has("userVerification")
-                    ? pendingChallenge.get("userVerification").asText()
+                    ? pendingChallenge.get("userVerification").asString()
                     : null;
 
             if ("approve".equals(effectiveAction)
@@ -419,7 +418,7 @@ public class ConfirmController {
         return signedJWT.serialize();
     }
 
-    private String getAccessToken(String iamUrl, String dPopToken) throws Exception {
+    private String getAccessToken(String iamUrl, String dPopToken) {
         String url = iamUrl + TOKEN_ENDPOINT;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -439,7 +438,7 @@ public class ConfirmController {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode jsonNode = mapper.readTree(response.getBody());
                 if (jsonNode.has("access_token")) {
-                    String token = jsonNode.get("access_token").asText();
+                    String token = jsonNode.get("access_token").asString();
                     logger.debug("Access token obtained successfully, token length: {}", token.length());
                     return token;
                 } else {
@@ -458,7 +457,7 @@ public class ConfirmController {
     }
 
     @SuppressWarnings("null")
-    JsonNode getPendingChallenges(String url, String dPopToken, String accessToken) throws Exception {
+    JsonNode getPendingChallenges(String url, String dPopToken, String accessToken) {
         logger.info("Fetching pending challenges from: {}", url);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.8</version>
+    <version>4.0.3</version>
     <relativePath/>
   </parent>
 
@@ -53,6 +53,11 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- Web dependencies -->
     <dependency>
       <groupId>org.webjars</groupId>
@@ -61,8 +66,7 @@
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
-      <artifactId>webjars-locator</artifactId>
-      <version>0.52</version>
+      <artifactId>webjars-locator-lite</artifactId>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

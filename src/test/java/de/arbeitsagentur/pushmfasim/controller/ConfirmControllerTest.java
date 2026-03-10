@@ -2,8 +2,6 @@ package de.arbeitsagentur.pushmfasim.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -12,16 +10,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ConfirmController Tests")
 class ConfirmControllerTest {
-
-    @Mock
-    private RestTemplate restTemplate;
 
     @InjectMocks
     private ConfirmController confirmController;
@@ -35,7 +30,7 @@ class ConfirmControllerTest {
 
     @Test
     @DisplayName("Should reject request with missing token")
-    void testMissingToken() throws Exception {
+    void testMissingToken() {
         // Empty token will cause JWT parsing to fail, which is expected behavior
         assertThrows(Exception.class, () -> {
             confirmController.completeEnrollProcess(
@@ -183,7 +178,7 @@ class ConfirmControllerTest {
 
     @Test
     @DisplayName("Should not require userVerification for deny action")
-    void testNoUserVerificationRequiredForDeny() throws Exception {
+    void testNoUserVerificationRequiredForDeny() {
         String effectiveAction = "deny";
         String pendingUserVerification = "required";
         String effectiveUserVerification = null;
@@ -242,15 +237,15 @@ class ConfirmControllerTest {
         JsonNode foundChallenge = null;
 
         for (JsonNode challenge : challengesNode) {
-            if (challenge.has("cid") && challenge.get("cid").asText().equals(targetChallengeId)) {
+            if (challenge.has("cid") && challenge.get("cid").asString().equals(targetChallengeId)) {
                 foundChallenge = challenge;
                 break;
             }
         }
 
         assertNotNull(foundChallenge);
-        assertEquals("challenge-1", foundChallenge.get("cid").asText());
-        assertEquals("required", foundChallenge.get("userVerification").asText());
+        assertEquals("challenge-1", foundChallenge.get("cid").asString());
+        assertEquals("required", foundChallenge.get("userVerification").asString());
     }
 
     @Test
@@ -264,7 +259,7 @@ class ConfirmControllerTest {
         JsonNode foundChallenge = null;
 
         for (JsonNode challenge : challengesNode) {
-            if (challenge.has("cid") && challenge.get("cid").asText().equals(targetChallengeId)) {
+            if (challenge.has("cid") && challenge.get("cid").asString().equals(targetChallengeId)) {
                 foundChallenge = challenge;
                 break;
             }

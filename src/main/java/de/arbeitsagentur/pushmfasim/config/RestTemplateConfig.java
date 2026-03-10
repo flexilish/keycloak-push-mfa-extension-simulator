@@ -1,18 +1,17 @@
 package de.arbeitsagentur.pushmfasim.config;
 
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
 import org.apache.hc.core5.http.HttpHost;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class RestTemplateConfig implements RestTemplateCustomizer {
+public class RestTemplateConfig {
 
     private final ProxyConfig proxyConfig;
 
@@ -21,19 +20,23 @@ public class RestTemplateConfig implements RestTemplateCustomizer {
     }
 
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.customizers(this).build();
-    }
-
-    @SuppressWarnings("null")
-    @Override
-    public void customize(RestTemplate restTemplate) {
+    public RestTemplate restTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
         if (proxyConfig.getHttpHost() != null && proxyConfig.getHttpPort() != -1) {
             HttpHost proxy = new HttpHost(proxyConfig.getHttpHost(), proxyConfig.getHttpPort());
-            HttpClient httpClient = HttpClientBuilder.create()
-                    .setRoutePlanner(new DefaultProxyRoutePlanner(proxy))
-                    .build();
-            restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
+            HttpClient httpClient = getHttpClient(proxy);
+            restTemplate.setRequestFactory(getRequestFactory(httpClient));
         }
+        return restTemplate;
+    }
+
+    protected CloseableHttpClient getHttpClient(HttpHost proxy) {
+        return HttpClientBuilder.create()
+                .setRoutePlanner(new DefaultProxyRoutePlanner(proxy))
+                .build();
+    }
+
+    protected HttpComponentsClientHttpRequestFactory getRequestFactory(HttpClient httpClient) {
+        return new HttpComponentsClientHttpRequestFactory(httpClient);
     }
 }

@@ -96,14 +96,14 @@ class EnrollControllerTest {
     // ============ Request Validation Tests ============
 
     @Test
-    void testInvalidJwtFormat() throws Exception {
+    void testInvalidJwtFormat() {
         assertThrows(Exception.class, () -> {
             enrollController.completeEnrollProcess("not.a.jwt", "context", null, null);
         });
     }
 
     @Test
-    void testInvalidJwtToken() throws Exception {
+    void testInvalidJwtToken() {
         assertThrows(Exception.class, () -> {
             enrollController.completeEnrollProcess("invalid-token-format", null, null, null);
         });

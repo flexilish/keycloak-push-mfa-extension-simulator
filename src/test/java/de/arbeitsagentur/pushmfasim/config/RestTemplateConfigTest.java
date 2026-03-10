@@ -1,14 +1,24 @@
 package de.arbeitsagentur.pushmfasim.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
+import org.apache.hc.core5.http.HttpHost;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.client.ClientHttpRequestFactory;
+import org.mockito.Spy;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 class RestTemplateConfigTest {
+
+    @Spy
+    HttpComponentsClientHttpRequestFactory[] httpComponentsClientHttpRequestFactory;
 
     @Test
     void shouldConfigureProxyWhenHostAndPortAreSet() {
@@ -17,15 +27,34 @@ class RestTemplateConfigTest {
         Mockito.when(proxyConfig.getHttpHost()).thenReturn("proxy.example.com");
         Mockito.when(proxyConfig.getHttpPort()).thenReturn(8080);
 
-        RestTemplateConfig config = new RestTemplateConfig(proxyConfig);
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplateConfig config = spy(new RestTemplateConfig(proxyConfig) {
+
+            @Override
+            protected HttpComponentsClientHttpRequestFactory getRequestFactory(HttpClient httpClient) {
+
+                httpComponentsClientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory[] {
+                    spy(new HttpComponentsClientHttpRequestFactory(httpClient))
+                };
+                return httpComponentsClientHttpRequestFactory[0];
+            }
+
+            @Override
+            protected CloseableHttpClient getHttpClient(HttpHost proxy) {
+                assertEquals(proxy.getPort(), proxyConfig.getHttpPort());
+                assertEquals(proxy.getHostName(), proxyConfig.getHttpHost());
+
+                return HttpClientBuilder.create()
+                        .setRoutePlanner(new DefaultProxyRoutePlanner(proxy))
+                        .build();
+            }
+        });
 
         // when
-        config.customize(restTemplate);
+        config.restTemplate();
 
         // then
-        ClientHttpRequestFactory requestFactory = restTemplate.getRequestFactory();
-        assertThat(requestFactory).isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
+        verify(config).getHttpClient(any());
+        assertNotNull(httpComponentsClientHttpRequestFactory[0]);
     }
 
     @Test
@@ -35,15 +64,24 @@ class RestTemplateConfigTest {
         Mockito.when(proxyConfig.getHttpHost()).thenReturn(null);
         Mockito.when(proxyConfig.getHttpPort()).thenReturn(8080);
 
-        RestTemplateConfig config = new RestTemplateConfig(proxyConfig);
-        RestTemplate restTemplate = new RestTemplate();
-        ClientHttpRequestFactory originalFactory = restTemplate.getRequestFactory();
+        RestTemplateConfig config = spy(new RestTemplateConfig(proxyConfig) {
+
+            @Override
+            protected HttpComponentsClientHttpRequestFactory getRequestFactory(HttpClient httpClient) {
+                httpComponentsClientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory[] {
+                    spy(new HttpComponentsClientHttpRequestFactory(httpClient))
+                };
+                return httpComponentsClientHttpRequestFactory[0];
+            }
+        });
 
         // when
-        config.customize(restTemplate);
+        RestTemplate restTemplate = spy(config.restTemplate());
 
         // then
-        assertThat(restTemplate.getRequestFactory()).isSameAs(originalFactory);
+        verify(config, never()).getHttpClient(any());
+        verify(restTemplate, never()).setRequestFactory(any());
+        assertNull(httpComponentsClientHttpRequestFactory);
     }
 
     @Test
@@ -53,14 +91,23 @@ class RestTemplateConfigTest {
         Mockito.when(proxyConfig.getHttpHost()).thenReturn("proxy.example.com");
         Mockito.when(proxyConfig.getHttpPort()).thenReturn(-1);
 
-        RestTemplateConfig config = new RestTemplateConfig(proxyConfig);
-        RestTemplate restTemplate = new RestTemplate();
-        ClientHttpRequestFactory originalFactory = restTemplate.getRequestFactory();
+        RestTemplateConfig config = spy(new RestTemplateConfig(proxyConfig) {
+
+            @Override
+            protected HttpComponentsClientHttpRequestFactory getRequestFactory(HttpClient httpClient) {
+                httpComponentsClientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory[] {
+                    spy(new HttpComponentsClientHttpRequestFactory(httpClient))
+                };
+                return httpComponentsClientHttpRequestFactory[0];
+            }
+        });
 
         // when
-        config.customize(restTemplate);
+        RestTemplate restTemplate = spy(config.restTemplate());
 
         // then
-        assertThat(restTemplate.getRequestFactory()).isSameAs(originalFactory);
+        verify(config, never()).getHttpClient(any());
+        verify(restTemplate, never()).setRequestFactory(any());
+        assertNull(httpComponentsClientHttpRequestFactory);
     }
 }

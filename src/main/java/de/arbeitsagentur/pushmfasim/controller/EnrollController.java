@@ -1,8 +1,5 @@
 package de.arbeitsagentur.pushmfasim.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -34,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/enroll")
@@ -121,10 +121,8 @@ public class EnrollController {
         JsonNode privateNode = root.get("private");
         logger.debug("JWK loaded successfully with public and private keys");
 
-        Map<String, Object> publicMap =
-                objectMapper.convertValue(publicNode, new TypeReference<Map<String, Object>>() {});
-        Map<String, Object> privateMap =
-                objectMapper.convertValue(privateNode, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> publicMap = objectMapper.convertValue(publicNode, new TypeReference<>() {});
+        Map<String, Object> privateMap = objectMapper.convertValue(privateNode, new TypeReference<>() {});
         RSAKey publicJwk = RSAKey.parse(publicMap);
         RSAKey privateJwk = RSAKey.parse(privateMap);
         logger.debug("RSA keys parsed successfully");

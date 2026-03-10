@@ -1,7 +1,5 @@
 package de.arbeitsagentur.pushmfasim.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.arbeitsagentur.pushmfasim.model.FcmMessageRequest;
 import de.arbeitsagentur.pushmfasim.model.FcmMessageResponse;
 import de.arbeitsagentur.pushmfasim.model.FcmTokenResponse;
@@ -13,9 +11,9 @@ import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -27,14 +25,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Controller
 public class FirebaseController {
     private static final String TOKEN_VALUE_STRING = "keycloak_push_mfa_simulator_valid_assertion";
     private static final Logger LOG = LoggerFactory.getLogger(FirebaseController.class.getName());
 
-    @Autowired
-    private SseService sseService;
+    private final SseService sseService;
+
+    public FirebaseController(SseService sseService) {
+        this.sseService = sseService;
+    }
 
     @PostMapping(value = "/fcm/token")
     public ResponseEntity<FcmTokenResponse> getToken(@RequestParam("assertion") String assertion) {
@@ -147,7 +150,7 @@ public class FirebaseController {
                 "type", "service_account",
                 "project_id", "ba-secure-mock",
                 "private_key_id", "some_key_id",
-                "private_key", privateKey,
+                "private_key", Objects.requireNonNull(getPrivateKeyPem()),
                 "client_email", "fcm-mock@test.de",
                 "token_uri", "http://localhost:5000/mock/fcm/token");
 
@@ -157,7 +160,7 @@ public class FirebaseController {
                     new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(credentials);
             LOG.info("Mock Firebase credentials generated successfully, size: {} bytes", jsonCredentials.length());
             return ResponseEntity.ok(jsonCredentials);
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             LOG.error("Failed to serialize mock credentials to JSON", ex);
         }
         return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(null);
